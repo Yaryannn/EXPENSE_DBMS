@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExpenseIQ — Smart Budget Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,wght@0,300;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+<!-- LOGIN PAGE -->
+<div id="login-page" class="page auth-page active">
+  <div class="auth-brand">
+    <div class="logo-text">💰 ExpenseIQ</div>
+    <div class="tagline">Smart Budget & Expense Manager</div>
+  </div>
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <p class="sub">Sign in to your account to continue</p>
+    <div class="role-hint">
+      <h4>🔑 Demo Accounts</h4>
+      <div class="role-row"><span class="role-name">admin / admin123</span><span class="role-badge badge-dba">DBA (all rights)</span></div>
+      <div class="role-row"><span class="role-name">editor / edit123</span><span class="role-badge badge-rw">View + Update</span></div>
+      <div class="role-row"><span class="role-name">viewer / view123</span><span class="role-badge badge-ro">View Only</span></div>
+    </div>
+    <div class="error-msg" id="login-error"></div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="Enter username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()">Sign In →</button>
+    <div class="auth-switch">No account? <a onclick="showPage('register-page')">Create one</a></div>
+  </div>
+</div>
+
+<!-- REGISTER PAGE -->
+<div id="register-page" class="page auth-page">
+  <div class="auth-brand">
+    <div class="logo-text">💰 ExpenseIQ</div>
+    <div class="tagline">Create your account</div>
+  </div>
+  <div class="auth-card">
+    <h2>Create Account</h2>
+    <p class="sub">Join ExpenseIQ and take control of your finances</p>
+    <div class="error-msg" id="reg-error"></div>
+    <div class="success-msg" id="reg-success"></div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="reg-user" placeholder="Choose a username">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="your@email.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="reg-pass" placeholder="Min. 6 characters">
+    </div>
+    <button class="btn btn-primary" onclick="doRegister()">Create Account →</button>
+    <div class="auth-switch">Already have? <a onclick="showPage('login-page')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div id="dashboard-page" class="page">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">💰 ExpenseIQ</div>
+      <div class="version">DBMS Project · v2.0 Enhanced</div>
+    </div>
+    <div class="user-chip">
+      <div class="user-avatar" id="sb-avatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="sb-name">Admin</div>
+        <div class="user-role" id="sb-role-badge">DBA</div>
+      </div>
+    </div>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="showTab('dashboard')"><span class="icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="showTab('expenses')"><span class="icon">💸</span> Expenses</div>
+    <div class="nav-item" onclick="showTab('budget')"><span class="icon">🎯</span> Budget</div>
+    <div class="nav-item" onclick="showTab('reports')"><span class="icon">📈</span> Reports</div>
+    <div class="nav-section">System</div>
+    <div class="nav-item" id="nav-dba" onclick="showTab('dba')"><span class="icon">🛡️</span> DBA Panel</div>
+    <div class="nav-item" onclick="showTab('sql')"><span class="icon">🗄️</span> SQL Viewer</div>
+    <div class="nav-item" onclick="showTab('ai')"><span class="icon">🤖</span> AI Agent</div>
+    <div class="sidebar-footer">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="btn btn-ghost btn-sm" id="theme-toggle-btn" style="flex:1;justify-content:center" onclick="toggleTheme()">☀️ Light</button>
+        <button class="btn btn-danger btn-sm" style="flex:1;justify-content:center" onclick="resetDB()">↺ Reset</button>
+      </div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="doLogout()">⬅ Sign Out</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="readonly-notice" id="readonly-notice">
+      👁️ You have <strong>View-Only</strong> access. You cannot add, edit, or delete data.
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <div class="subtitle">Your financial overview for <span id="current-month-label"></span></div>
+      </div>
+      <div id="alerts-area"></div>
+      <div class="stats-grid">
+        <div class="stat-card purple">
+          <div class="stat-label">Total Spent (Month)</div>
+          <div class="stat-value" id="stat-spent">₹0</div>
+          <div class="stat-sub" id="stat-spent-sub">vs ₹0 budget</div>
+          <div class="stat-icon">💸</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Budget Remaining</div>
+          <div class="stat-value" id="stat-remaining">₹0</div>
+          <div class="stat-sub" id="stat-remaining-sub">for this month</div>
+          <div class="stat-icon">🎯</div>
+        </div>
+        <div class="stat-card pink">
+          <div class="stat-label">Total Expenses</div>
+          <div class="stat-value" id="stat-count">0</div>
+          <div class="stat-sub">transactions this month</div>
+          <div class="stat-icon">📋</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Largest Expense</div>
+          <div class="stat-value" id="stat-max">₹0</div>
+          <div class="stat-sub" id="stat-max-cat">—</div>
+          <div class="stat-icon">🔥</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">💳 Budget Progress</div><div class="card-sub">Spent vs. monthly limit</div></div>
+          </div>
+          <div id="budget-bars-area"><div class="empty-state"><div class="empty-icon">🎯</div><p>No budget set. Go to Budget tab.</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">🍩 Category Breakdown</div><div class="card-sub">SUM + GROUP BY category</div></div>
+          </div>
+          <div id="donut-wrap"><div class="empty-state" style="width:100%"><div class="empty-icon">📊</div><p>Add expenses to see breakdown</p></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">🕐 Recent Expenses</div><div class="card-sub">Last 5 transactions</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="showTab('expenses')">View all →</button>
+        </div>
+        <div id="recent-expenses-area"><div class="empty-state"><div class="empty-icon">💸</div><p>No expenses yet</p></div></div>
+      </div>
+    </div>
+
+    <!-- EXPENSES TAB -->
+    <div class="tab-content" id="tab-expenses">
+      <div class="page-header"><h1>Expenses</h1><div class="subtitle">Track your daily spending</div></div>
+      <div class="grid-2">
+        <div class="card" id="add-expense-card">
+          <div class="card-title" style="margin-bottom:20px">➕ Add Expense</div>
+          <div class="form-group"><label>Amount (₹)</label><input type="number" id="exp-amount" placeholder="0.00" min="0" step="0.01"></div>
+          <div class="form-group"><label>Description</label><input type="text" id="exp-desc" placeholder="What did you spend on?"></div>
+          <div class="form-group"><label>Category</label><select id="exp-cat"><option value="">Select category</option></select></div>
+          <div class="form-group"><label>Date</label><input type="date" id="exp-date"></div>
+          <button class="btn btn-primary" id="btn-add-expense" onclick="addExpense()">Add Expense</button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px">🔍 Filter & Summary</div>
+          <div class="form-group"><label>Filter by Category</label><select id="filter-cat" onchange="renderExpensesTable()"><option value="">All Categories</option></select></div>
+          <div class="form-group"><label>Filter by Month</label><input type="month" id="filter-month" onchange="renderExpensesTable()"></div>
+          <div class="divider"></div>
+          <div class="stat-label">Filtered Total</div>
+          <div style="font-family:'Fraunces',serif;font-size:2rem;margin-top:6px" id="filtered-total">₹0.00</div>
+          <div style="font-size:.78rem;color:var(--text-dim);margin-top:4px" id="filtered-count">0 transactions</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 All Expenses</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:.78rem;color:var(--text-dim)">SQL: SELECT * FROM expense JOIN category...</div>
+            <button class="btn btn-success btn-sm" onclick="exportCSV()">📥 CSV</button>
+          </div>
+        </div>
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="exp-search" placeholder="Search expenses by description..." oninput="renderExpensesTable()">
+        </div>
+        <div id="expenses-table-area"><div class="empty-state"><div class="empty-icon">💸</div><p>No expenses found</p></div></div>
+      </div>
+    </div>
+
+    <!-- BUDGET TAB -->
+    <div class="tab-content" id="tab-budget">
+      <div class="page-header"><h1>Budget Manager</h1><div class="subtitle">Set monthly spending limits</div></div>
+      <div class="grid-2">
+        <div class="card" id="set-budget-card">
+          <div class="card-title" style="margin-bottom:20px">🎯 Set Monthly Budget</div>
+          <div class="form-group"><label>Month & Year</label><input type="month" id="bud-month"></div>
+          <div class="form-group"><label>Monthly Limit (₹)</label><input type="number" id="bud-limit" placeholder="e.g. 15000" min="1"></div>
+          <button class="btn btn-success" onclick="setBudget()">💾 Save Budget</button>
+          <div class="divider"></div>
+          <div style="font-size:.75rem;color:var(--text-dim);line-height:1.7">
+            <strong style="color:var(--accent)">SQL (UPSERT logic):</strong><br>
+            INSERT INTO budget ... ON DUPLICATE KEY UPDATE...<br><br>
+            <strong style="color:var(--accent3)">TRIGGER fires if spent &gt; limit</strong>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px">📅 Budget History</div>
+          <div id="budget-history-area"><div class="empty-state"><div class="empty-icon">🎯</div><p>No budgets set yet</p></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:20px">📊 Budget vs Actual Comparison</div>
+        <div id="bva-area"><div class="empty-state"><div class="empty-icon">📈</div><p>Set a budget to see comparison</p></div></div>
+      </div>
+    </div>
+
+    <!-- REPORTS TAB -->
+    <div class="tab-content" id="tab-reports">
+      <div class="page-header"><h1>Reports</h1><div class="subtitle">Monthly summaries & analytics</div></div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">📈 Monthly Spending Trend</div><div class="card-sub">SUM(amount) GROUP BY MONTH(date)</div></div>
+        </div>
+        <div class="chart-outer">
+          <div class="chart-bars" id="monthly-chart">
+            <div class="empty-state" style="width:100%"><div class="empty-icon">📈</div><p>Add expenses to see trends</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🏆 Top Spending Categories</div>
+          <div id="top-cats-area"><div class="empty-state"><div class="empty-icon">🏆</div><p>No data yet</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">📊 Monthly Report Summary</div>
+          <div id="monthly-report-area"><div class="empty-state"><div class="empty-icon">📄</div><p>No data yet</p></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">🥧 Category Pie Chart (All Time)</div>
+        <div id="pie-chart-area"><div class="empty-state"><div class="empty-icon">🥧</div><p>Add expenses to see pie chart</p></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">📅 Daily Spending (This Month)</div><div class="card-sub">SUM(amount) GROUP BY DATE(date)</div></div>
+          </div>
+          <div class="chart-outer">
+            <div class="chart-bars" id="daily-chart" style="height:160px">
+              <div class="empty-state" style="width:100%"><div class="empty-icon">📅</div><p>No data yet</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">📊 Category Comparison (Bar)</div><div class="card-sub">SUM(amount) GROUP BY category_name</div></div>
+          </div>
+          <div class="chart-outer">
+            <div class="chart-bars" id="cat-bar-chart" style="height:160px">
+              <div class="empty-state" style="width:100%"><div class="empty-icon">📊</div><p>No data yet</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">🔥 Spending Heatmap (Last 30 Days)</div><div class="card-sub">Visual heat map of daily spending intensity</div></div>
+        </div>
+        <div id="heatmap-area"><div class="empty-state"><div class="empty-icon">🔥</div><p>Add expenses to see heatmap</p></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">💰 Budget Utilization (All Months)</div><div class="card-sub">Budget used % across all months</div></div>
+          </div>
+          <div class="chart-outer">
+            <div class="chart-bars" id="budget-util-chart" style="height:160px">
+              <div class="empty-state" style="width:100%"><div class="empty-icon">💰</div><p>Set budgets to see utilization</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">🧮 Avg Expense per Category</div><div class="card-sub">AVG(amount) GROUP BY category</div></div>
+          </div>
+          <div id="avg-cat-area"><div class="empty-state"><div class="empty-icon">🧮</div><p>No data yet</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DBA PANEL TAB -->
+    <div class="tab-content" id="tab-dba">
+      <div class="page-header"><h1>🛡️ DBA Panel</h1><div class="subtitle">Database Administrator — User & Permission Management</div></div>
+      <div id="dba-restricted" style="display:none" class="alert-banner alert-danger">🚫 Access Denied. Only the DBA (admin) can view this panel.</div>
+      <div id="dba-content">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px">➕ CREATE USER (DBA Only)</div>
+          <div class="grid-3">
+            <div class="form-group"><label>Username</label><input type="text" id="dba-uname" placeholder="new_user"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="dba-upass" placeholder="password"></div>
+            <div class="form-group"><label>Role</label>
+              <select id="dba-urole">
+                <option value="dba">DBA (all rights)</option>
+                <option value="editor" selected>Editor (view+update)</option>
+                <option value="viewer">Viewer (read only)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>Email (optional)</label><input type="email" id="dba-uemail" placeholder="user@expenseiq.com"></div>
+          <button class="btn btn-primary" style="width:auto;padding:10px 24px;" onclick="createDBUser()">CREATE USER & GRANT</button>
+          <div id="dba-create-msg" style="margin-top:12px;display:none;"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">👥 Database Users & Privileges</div><div class="card-sub">GRANT / REVOKE privileges per role</div></div>
+            <button class="btn btn-ghost btn-sm" onclick="renderDBAPanel()">↻ Refresh</button>
+          </div>
+          <div class="dba-users-grid" id="dba-users-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">📜 Audit / Transaction Log</div><div class="card-sub">Tracks all INSERT, UPDATE, DELETE, LOGIN operations</div></div>
+          </div>
+          <div id="audit-log-area"><div class="empty-state"><div class="empty-icon">📜</div><p>No audit entries yet</p></div></div>
+        </div>
+        <div class="sql-panel">
+          <div class="sql-panel-header"><div class="sql-dot" style="background:#ff5f57"></div><div class="sql-dot" style="background:#febc2e"></div><div class="sql-dot" style="background:#28c840"></div><span style="color:var(--text-dim);margin-left:8px">MySQL — DBA Rights (GRANT Statements)</span></div>
+          <div class="sql-body"><span class="sql-kw">GRANT ALL PRIVILEGES ON</span> <span class="sql-tbl">expenseiq.*</span> <span class="sql-kw">TO</span> <span class="sql-str">'admin'</span>@<span class="sql-str">'localhost'</span>;
+<span class="sql-kw">GRANT CREATE USER ON</span> *.* <span class="sql-kw">TO</span> <span class="sql-str">'admin'</span>@<span class="sql-str">'localhost'</span> <span class="sql-kw">WITH GRANT OPTION</span>;
+<span class="sql-kw">GRANT SELECT, INSERT, UPDATE ON</span> <span class="sql-tbl">expenseiq.*</span> <span class="sql-kw">TO</span> <span class="sql-str">'editor'</span>@<span class="sql-str">'localhost'</span>;
+<span class="sql-kw">GRANT SELECT ON</span> <span class="sql-tbl">expenseiq.*</span> <span class="sql-kw">TO</span> <span class="sql-str">'viewer'</span>@<span class="sql-str">'localhost'</span>;
+<span class="sql-kw">FLUSH PRIVILEGES</span>;</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SQL VIEWER TAB -->
+    <div class="tab-content" id="tab-sql">
+      <div class="page-header"><h1>🗄️ SQL Viewer</h1><div class="subtitle">Live schema, queries, and DBMS concepts</div></div>
+      <div class="section-title">📐 Table Schema</div>
+      <div class="sql-panel">
+        <div class="sql-panel-header"><div class="sql-dot" style="background:#ff5f57"></div><div class="sql-dot" style="background:#febc2e"></div><div class="sql-dot" style="background:#28c840"></div><span style="color:var(--text-dim);margin-left:8px">schema.sql</span></div>
+        <div class="sql-body"><span class="sql-kw">CREATE TABLE</span> <span class="sql-tbl">user</span> (
+  user_id       <span class="sql-fn">INT</span> <span class="sql-kw">PRIMARY KEY AUTO_INCREMENT</span>,
+  username      <span class="sql-fn">VARCHAR</span>(<span class="sql-num">50</span>) <span class="sql-kw">UNIQUE NOT NULL</span>,
+  email         <span class="sql-fn">VARCHAR</span>(<span class="sql-num">100</span>) <span class="sql-kw">UNIQUE NOT NULL</span>,
+  password_hash <span class="sql-fn">VARCHAR</span>(<span class="sql-num">255</span>) <span class="sql-kw">NOT NULL</span>
+);
+<span class="sql-kw">CREATE TABLE</span> <span class="sql-tbl">expense</span> (
+  expense_id  <span class="sql-fn">INT</span> <span class="sql-kw">PRIMARY KEY AUTO_INCREMENT</span>,
+  amount      <span class="sql-fn">FLOAT</span> <span class="sql-kw">NOT NULL CHECK</span> (amount &gt; <span class="sql-num">0</span>),
+  description <span class="sql-fn">VARCHAR</span>(<span class="sql-num">255</span>),
+  date        <span class="sql-fn">DATE</span> <span class="sql-kw">NOT NULL</span>,
+  user_id     <span class="sql-fn">INT</span> <span class="sql-kw">NOT NULL</span>,
+  category_id <span class="sql-fn">INT</span> <span class="sql-kw">NOT NULL</span>,
+  <span class="sql-kw">FOREIGN KEY</span> (user_id) <span class="sql-kw">REFERENCES</span> <span class="sql-tbl">user</span>(user_id),
+  <span class="sql-kw">FOREIGN KEY</span> (category_id) <span class="sql-kw">REFERENCES</span> <span class="sql-tbl">category</span>(category_id)
+);</div>
+      </div>
+      <div class="tab-bar" style="margin-bottom:16px">
+        <div class="tab active" onclick="switchSQLTab(this,'sq1')">Aggregation</div>
+        <div class="tab" onclick="switchSQLTab(this,'sq2')">JOIN</div>
+        <div class="tab" onclick="switchSQLTab(this,'sq3')">Trigger</div>
+        <div class="tab" onclick="switchSQLTab(this,'sq4')">View</div>
+      </div>
+      <div class="sql-panel" id="sq1"><div class="sql-panel-header"><div class="sql-dot" style="background:#ff5f57"></div><div class="sql-dot" style="background:#febc2e"></div><div class="sql-dot" style="background:#28c840"></div><span style="color:var(--text-dim);margin-left:8px">Aggregation</span></div>
+        <div class="sql-body"><span class="sql-kw">SELECT</span> c.category_name, <span class="sql-fn">SUM</span>(e.amount) <span class="sql-kw">AS</span> total_spent
+<span class="sql-kw">FROM</span> <span class="sql-tbl">expense</span> e <span class="sql-kw">JOIN</span> <span class="sql-tbl">category</span> c <span class="sql-kw">ON</span> e.category_id = c.category_id
+<span class="sql-kw">GROUP BY</span> c.category_id <span class="sql-kw">ORDER BY</span> total_spent <span class="sql-kw">DESC</span>;</div></div>
+      <div class="sql-panel" id="sq2" style="display:none"><div class="sql-panel-header"><div class="sql-dot" style="background:#ff5f57"></div><span style="color:var(--text-dim);margin-left:8px">JOIN</span></div>
+        <div class="sql-body"><span class="sql-kw">SELECT</span> e.expense_id, e.amount, c.category_name
+<span class="sql-kw">FROM</span> <span class="sql-tbl">expense</span> e <span class="sql-kw">INNER JOIN</span> <span class="sql-tbl">category</span> c <span class="sql-kw">ON</span> e.category_id = c.category_id
+<span class="sql-kw">WHERE</span> e.user_id = <span class="sql-num">1</span> <span class="sql-kw">ORDER BY</span> e.date <span class="sql-kw">DESC</span>;</div></div>
+      <div class="sql-panel" id="sq3" style="display:none"><div class="sql-panel-header"><div class="sql-dot" style="background:#ff5f57"></div><span style="color:var(--text-dim);margin-left:8px">Trigger</span></div>
+        <div class="sql-body"><span class="sql-kw">CREATE TRIGGER</span> check_budget_limit
+<span class="sql-kw">AFTER INSERT ON</span> <span class="sql-tbl">expense</span> <span class="sql-kw">FOR EACH ROW</span>
+<span class="sql-kw">BEGIN</span>
+  <span class="sql-kw">IF</span> v_spent &gt; v_limit <span class="sql-kw">THEN</span>
+    <span class="sql-fn">SIGNAL SQLSTATE</span> <span class="sql-str">'45000'</span> <span class="sql-kw">SET MESSAGE_TEXT</span> = <span class="sql-str">'Budget exceeded!'</span>;
+  <span class="sql-kw">END IF</span>;
+<span class="sql-kw">END</span>;</div></div>
+      <div class="sql-panel" id="sq4" style="display:none"><div class="sql-panel-header"><div class="sql-dot" style="background:#ff5f57"></div><span style="color:var(--text-dim);margin-left:8px">View</span></div>
+        <div class="sql-body"><span class="sql-kw">CREATE VIEW</span> <span class="sql-tbl">expense_summary_view</span> <span class="sql-kw">AS</span>
+  <span class="sql-kw">SELECT</span> e.expense_id, u.username, e.amount, c.category_name
+  <span class="sql-kw">FROM</span> <span class="sql-tbl">expense</span> e <span class="sql-kw">JOIN</span> <span class="sql-tbl">user</span> u <span class="sql-kw">ON</span> e.user_id = u.user_id
+  <span class="sql-kw">JOIN</span> <span class="sql-tbl">category</span> c <span class="sql-kw">ON</span> e.category_id = c.category_id;</div></div>
+      <div class="section-title" style="margin-top:28px">📦 Live Data State</div>
+      <div class="card" id="live-data-card"><div id="live-data-area"></div></div>
+    </div>
+
+    <!-- AI AGENT TAB -->
+    <div class="tab-content" id="tab-ai">
+      <div class="page-header"><h1>🤖 AI Finance Agent</h1><div class="subtitle">Powered by Claude — Ask anything about your finances</div></div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title" style="margin-bottom:12px">🔑 API Key Setup</div>
+        <div class="card-sub" style="margin-bottom:14px">Enter your Anthropic API key to enable AI. Get one free at <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input type="password" id="ai-api-key" placeholder="sk-ant-api03-..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:.82rem;outline:none;">
+          <button class="btn btn-success btn-sm" onclick="saveAPIKey()">💾 Save</button>
+        </div>
+        <div id="api-key-status" style="font-size:.75rem;color:var(--text-muted);margin-top:8px"></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title" style="margin-bottom:8px">💬 AI Financial Advisor</div>
+            <div class="card-sub" style="margin-bottom:20px">Ask about your spending, get tips, or learn DBMS concepts</div>
+            <div class="ai-chat-wrap">
+              <div class="ai-messages" id="ai-messages">
+                <div class="msg msg-ai">
+                  <div class="msg-label">🤖 ExpenseIQ AI</div>
+                  Hello! I'm your AI Financial Advisor. I can analyze your spending, give budget tips, suggest savings, or explain any DBMS concept in this project. What would you like to know?
+                </div>
+              </div>
+              <div class="ai-input-row">
+                <input type="text" id="ai-input" placeholder="e.g. Analyze my spending habits..." onkeydown="if(event.key==='Enter')sendAIMsg()">
+                <button class="btn-ai" id="ai-send-btn" onclick="sendAIMsg()">Ask →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">💡 Suggested Questions</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left" onclick="askSuggestion(this)">Analyze my spending habits this month</button>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left" onclick="askSuggestion(this)">Which category am I overspending on?</button>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left" onclick="askSuggestion(this)">Give me 5 tips to reduce expenses</button>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left" onclick="askSuggestion(this)">Explain what a SQL trigger is</button>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left" onclick="askSuggestion(this)">What is the difference between DBA, editor, and viewer?</button>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left" onclick="askSuggestion(this)">How should I set my budget for next month?</button>
+            </div>
+          </div>
+          <div class="card" style="margin-top:0">
+            <div class="card-title" style="margin-bottom:12px">📊 Your Data Context (sent to AI)</div>
+            <div id="ai-context-preview" style="font-size:.75rem;color:var(--text-dim);line-height:1.8"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Edit Expense</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- JS Files (load order matters) -->
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/expenses.js"></script>
+<script src="js/budget.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/dba.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
